@@ -112,14 +112,16 @@ def ingest_youtube(
         "retries": 3,
         "fragment_retries": 3,
     }
+    # yt-dlp needs ffmpeg to merge the separate audio and video streams that
+    # YouTube commonly serves. The application can locate Scoop's install even
+    # when the server was started without the user's PATH, so pass that
+    # location directly instead of relying on yt-dlp's PATH lookup.
+    ffmpeg_exe = ffmpeg.find_executable("ffmpeg")
+    if ffmpeg_exe:
+        options["ffmpeg_location"] = ffmpeg_exe
     if settings.cookies_from_browser:
         # yt-dlp expects a tuple; only the browser name is required.
         options["cookiesfrombrowser"] = (settings.cookies_from_browser,)
-    if settings.prefer_youtube_captions:
-        options["writeautomaticsub"] = True
-        options["subtitleslangs"] = ["en.*"]
-        options["subtitlesformat"] = "json3"
-
     try:
         with yt_dlp.YoutubeDL(options) as ydl:
             metadata = ydl.extract_info(url, download=True)
@@ -134,6 +136,30 @@ def ingest_youtube(
     if downloaded is None:
         shutil.rmtree(target_dir, ignore_errors=True)
         raise IngestError("yt-dlp reported success but produced no media file.")
+
+    if settings.prefer_youtube_captions:
+        # Keep caption retrieval optional: YouTube may rate-limit caption
+        # endpoints even after the media itself downloaded successfully. A
+        # caption failure must not throw away a valid source download.
+        caption_options = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "writesubtitles": True,
+            "writeautomaticsub": True,
+            "subtitleslangs": ["en.*"],
+            "subtitlesformat": "json3",
+            "outtmpl": str(target_dir / "source.%(ext)s"),
+        }
+        try:
+            with yt_dlp.YoutubeDL(caption_options) as ydl:
+                ydl.extract_info(url, download=True)
+        except Exception as exc:
+            log.info(
+                "YouTube captions unavailable for %s (%s); Whisper will transcribe it.",
+                url,
+                exc,
+            )
 
     info = _probe_and_validate(downloaded)
 

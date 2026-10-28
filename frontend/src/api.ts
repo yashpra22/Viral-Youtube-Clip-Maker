@@ -129,6 +129,36 @@ export interface ProviderStatus {
   has_key: boolean
 }
 
+export interface VideoItem {
+  title: string
+  url: string
+  duration: number
+  view_count: number
+  category: string
+  license: string
+  status: string
+  job_id?: string | null
+  stage?: string
+  progress?: number
+  error?: string | null
+}
+
+export interface VideoListResponse {
+  videos: VideoItem[]
+  total: number
+}
+
+export interface StatusResponse {
+  statuses: Record<string, string>
+  active: boolean
+  phase: string
+  message: string
+  total: number
+  completed: number
+  eta_seconds: number | null
+  error: string | null
+}
+
 export interface Settings {
   active_provider: string
   providers: Record<string, { model: string; base_url: string | null }>
@@ -145,6 +175,7 @@ export interface Settings {
     loudness_lufs: number
     prefer_hardware_encoder: boolean
     crf: number
+    x264_preset: 'ultrafast' | 'superfast' | 'veryfast' | 'faster' | 'fast' | 'medium' | 'slow'
     write_srt: boolean
   }
   insecure_secret_storage: boolean
@@ -281,6 +312,13 @@ export const api = {
 
   captionStyles: () => request<CaptionStyle[]>('/api/caption-styles'),
   providerStatus: () => request<ProviderStatus[]>('/api/providers/status'),
+
+  // Automation
+  getAutomationVideos: () => request<VideoListResponse>('/api/automation/videos'),
+  getAutomationStatus: () => request<StatusResponse>('/api/automation/status'),
+  startAutomation: (query: string, fresh = false) => request<StatusResponse>('/api/automation/start', {
+    method: 'POST', body: JSON.stringify({ query, count: 20, fresh }),
+  }),
 
   getSettings: () => request<Settings>('/api/settings'),
   putSettings: (patch: Partial<Settings>) =>

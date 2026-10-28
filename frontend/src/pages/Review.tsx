@@ -151,12 +151,12 @@ export function Review() {
 
   return (
     <div className="pt-10">
-      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-ink-800 pb-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-ink-300 pb-5">
         <div className="min-w-0">
-          <Link to="/" className="eyebrow transition-colors hover:text-sodium-500">
+          <Link to="/" className="eyebrow transition-colors hover:text-accent-600">
             ← All jobs
           </Link>
-          <h1 className="mt-2 max-w-2xl truncate font-display text-[clamp(1.5rem,3vw,2.25rem)] leading-tight text-ink-100">
+          <h1 className="mt-2 max-w-2xl truncate font-display text-[clamp(1.5rem,3vw,2.25rem)] leading-tight text-ink-900">
             {job.source?.title || 'Untitled'}
           </h1>
         </div>
@@ -183,7 +183,7 @@ export function Review() {
         <div className="mt-8 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,20rem)_minmax(0,26rem)_minmax(0,1fr)]">
           {/* Ranked list */}
           <section className="lg:max-h-[76vh] lg:overflow-y-auto lg:pr-1">
-            <p className="eyebrow border-b border-ink-800 pb-2">Ranked</p>
+            <p className="eyebrow border-b border-ink-300 pb-2">Ranked</p>
             <ul>
               {clips.map((clip, index) => (
                 <li key={clip.id}>
@@ -239,7 +239,7 @@ export function Review() {
                     {selected.reason || 'No rationale returned for this clip.'}
                   </p>
                   {selected.hook && (
-                    <p className="mt-3 border-l-2 border-ink-700 pl-3 font-display text-lg italic text-ink-200">
+                    <p className="mt-3 border-l-2 border-ink-700 pl-3 font-display text-lg italic text-ink-800">
                       “{selected.hook}”
                     </p>
                   )}
@@ -257,7 +257,7 @@ export function Review() {
                 />
 
                 <div>
-                  <p className="eyebrow border-b border-ink-800 pb-2">Caption style</p>
+                  <p className="eyebrow border-b border-ink-300 pb-2">Caption style</p>
                   <div className="mt-3 space-y-1">
                     {styles.map((style) => (
                       <button
@@ -266,11 +266,11 @@ export function Review() {
                         className={[
                           'block w-full border-l-2 py-2 pl-3 text-left transition-colors duration-200',
                           style.key === selected.caption_style
-                            ? 'border-sodium-500 bg-ink-850/60'
-                            : 'border-transparent hover:border-ink-700 hover:bg-ink-850/30',
+                            ? 'border-sodium-500 bg-surface-elevated/60'
+                            : 'border-transparent hover:border-ink-700 hover:bg-surface-elevated/30',
                         ].join(' ')}
                       >
-                        <span className="text-sm text-ink-100">{style.label}</span>
+                        <span className="text-sm text-ink-900">{style.label}</span>
                         <span className="mt-0.5 block text-xs leading-snug text-ink-500">
                           {style.description}
                         </span>
@@ -280,7 +280,7 @@ export function Review() {
                 </div>
 
                 <div>
-                  <p className="eyebrow border-b border-ink-800 pb-2">Aspect ratio</p>
+                  <p className="eyebrow border-b border-ink-300 pb-2">Aspect ratio</p>
                   <div className="mt-3 flex gap-2">
                     {RATIOS.map((ratio) => (
                       <button
@@ -297,7 +297,7 @@ export function Review() {
                   </div>
                 </div>
 
-                <div className="border-t border-ink-800 pt-6">
+                <div className="border-t border-ink-300 pt-6">
                   <button
                     onClick={() => exportClip(selected)}
                     disabled={exporting.has(selected.id)}
@@ -307,25 +307,36 @@ export function Review() {
                   </button>
 
                   {selected.exports.length > 0 && (
-                    <ul className="mt-4 space-y-2">
-                      {selected.exports.map((record) => (
-                        <li
-                          key={record.id}
-                          className="flex items-baseline justify-between gap-3 text-xs"
-                        >
-                          <a
-                            href={record.download_url}
-                            download
-                            className="truncate text-sodium-500 underline underline-offset-4"
+                    <>
+                      <p className="mt-5 eyebrow">Rendered short preview</p>
+                      <video
+                        // The API returns exports newest first.
+                        key={selected.exports[0].id}
+                        src={selected.exports[0].download_url}
+                        controls
+                        playsInline
+                        className="mt-2 aspect-[9/16] max-h-[55vh] w-auto rounded-lg bg-black"
+                      />
+                      <ul className="mt-4 space-y-2">
+                        {selected.exports.map((record) => (
+                          <li
+                            key={record.id}
+                            className="flex items-baseline justify-between gap-3 text-xs"
                           >
-                            {record.ratio} · {record.style}
-                          </a>
-                          <span className="numeric shrink-0 text-ink-600">
-                            {formatBytes(record.size_bytes)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                            <a
+                              href={record.download_url}
+                              download
+                              className="truncate text-accent-600 underline underline-offset-4"
+                            >
+                              {record.ratio} · {record.style}
+                            </a>
+                            <span className="numeric shrink-0 text-ink-500">
+                              {formatBytes(record.size_bytes)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
                   )}
                 </div>
               </>
@@ -355,8 +366,8 @@ function ClipRow({
   return (
     <div
       className={[
-        'rise group grid cursor-pointer grid-cols-[2.25rem_1fr] gap-x-3 border-b border-ink-850 py-3 pl-2 transition-colors duration-200',
-        selected ? 'bg-ink-850/70' : 'hover:bg-ink-850/35',
+        'rise group grid cursor-pointer grid-cols-[2.25rem_1fr] gap-x-3 border-b border-ink-200 py-3 pl-2 transition-colors duration-200',
+        selected ? 'bg-surface-elevated/70' : 'hover:bg-surface-elevated/35',
         clip.status === 'discarded' ? 'opacity-40' : '',
       ].join(' ')}
       style={{ animationDelay: `${Math.min(index, 10) * 35}ms` }}
@@ -371,19 +382,19 @@ function ClipRow({
       <span
         className={[
           'numeric self-start font-display text-2xl leading-none',
-          clip.score >= 85 ? 'text-sodium-500' : selected ? 'text-ink-200' : 'text-ink-500',
+          clip.score >= 85 ? 'text-accent-600' : selected ? 'text-ink-800' : 'text-ink-500',
         ].join(' ')}
       >
         {clip.score}
       </span>
 
       <div className="min-w-0">
-        <p className="truncate text-[0.9375rem] leading-snug text-ink-100">
+        <p className="truncate text-[0.9375rem] leading-snug text-ink-900">
           {clip.title || 'Untitled clip'}
         </p>
         <div className="mt-1 flex items-baseline gap-3">
           <span className="numeric text-xs text-ink-500">{formatDuration(clip.duration_s)}</span>
-          {clip.user_trimmed && <span className="text-xs text-ink-600">trimmed</span>}
+          {clip.user_trimmed && <span className="text-xs text-ink-500">trimmed</span>}
           {clip.exports.length > 0 && (
             <span className="text-xs text-signal-good">exported</span>
           )}
@@ -401,7 +412,7 @@ function ClipRow({
                 e.stopPropagation()
                 onKeep()
               }}
-              className={`text-xs ${clip.status === 'kept' ? 'text-signal-good' : 'text-ink-400 hover:text-ink-100'}`}
+              className={`text-xs ${clip.status === 'kept' ? 'text-signal-good' : 'text-ink-500 hover:text-ink-900'}`}
             >
               {clip.status === 'kept' ? 'kept' : 'keep'}
             </button>
@@ -410,7 +421,7 @@ function ClipRow({
                 e.stopPropagation()
                 onDiscard()
               }}
-              className="text-xs text-ink-400 hover:text-signal-bad"
+              className="text-xs text-ink-500 hover:text-signal-bad"
             >
               {clip.status === 'discarded' ? 'undo' : 'drop'}
             </button>
@@ -424,12 +435,12 @@ function ClipRow({
 function EmptyState() {
   return (
     <div className="max-w-xl pt-20">
-      <h2 className="font-display text-3xl text-ink-200">No clips came back.</h2>
-      <p className="mt-4 text-sm leading-relaxed text-ink-400">
+      <h2 className="font-display text-3xl text-ink-800">No clips came back.</h2>
+      <p className="mt-4 text-sm leading-relaxed text-ink-500">
         The model found nothing self-contained enough to stand alone — which is a real
         answer for some source material, not necessarily a failure.
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-ink-400">
+      <p className="mt-3 text-sm leading-relaxed text-ink-500">
         If you expected clips, try a larger provider model, or widen the length range so
         shorter moments qualify.
       </p>

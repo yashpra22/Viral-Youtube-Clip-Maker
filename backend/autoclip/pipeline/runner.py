@@ -25,7 +25,7 @@ from ..db import store
 from ..db.models import Clip, Export, Job, Source, new_id, utcnow
 from ..db.models import Transcript as TranscriptRow
 from ..providers import build_provider, detection_config
-from . import Stage, captions, export, ffmpeg, highlights, prepare, transcribe
+from . import Stage, captions, export, ffmpeg, highlights, prepare, transcribe, youtube_captions
 from .prepare import Silence
 from .reframe import ReframeConfig, build_crop_path
 from .reframe.croppath import CropPath
@@ -225,6 +225,33 @@ class PipelineRunner:
             self._finish_stage(stage)
             return transcript
 
+        if self.settings.ingest.prefer_youtube_captions and self.source.type == "youtube":
+            caption_file = youtube_captions.find_json3(Path(self.source.path).parent)
+            if caption_file is not None:
+                try:
+                    transcript = youtube_captions.load_json3(caption_file)
+                except (OSError, ValueError, json.JSONDecodeError) as exc:
+                    log.warning(
+                        "Could not use YouTube captions for %s (%s); using Whisper.",
+                        self.job.id,
+                        exc,
+                    )
+                else:
+                    transcript.save(self.workspace.transcript)
+                    store.upsert_transcript(
+                        TranscriptRow(
+                            job_id=self.job.id,
+                            json_path=str(self.workspace.transcript),
+                            language=transcript.language,
+                            model=transcript.model,
+                            has_diarization=False,
+                            word_count=len(transcript.words),
+                            source=transcript.source,
+                        )
+                    )
+                    self._finish_stage(stage)
+                    return transcript
+
         self._emit(stage, 0.0, "Transcribing")
         transcript = transcribe.transcribe(
             audio,
@@ -359,7 +386,12 @@ class PipelineRunner:
         style = captions.get_style(self.settings.export.caption_style)
         ratio = self.settings.export.ratio
         source_path = Path(self.source.path)
-        destination_dir = paths.exports_dir() / self.job.id
+        automation_export_dir = self.job.settings.get("automation_export_dir")
+        destination_dir = (
+            Path(automation_export_dir)
+            if automation_export_dir
+            else paths.exports_dir() / self.job.id
+        )
         destination_dir.mkdir(parents=True, exist_ok=True)
 
         for index, clip in enumerate(clips):
@@ -367,9 +399,29 @@ class PipelineRunner:
 
             crop_path = crop_paths.get(clip.id) or self._fallback_crop_path(clip, ratio)
             words = transcript.slice(clip.start_word, clip.end_word)
+            title = clip.title or f"clip-{clip.rank}"
+            if automation_export_dir:
+                title = f"{clip.rank:02d}-{title}"
             destination = destination_dir / export.output_filename(
-                clip.title or f"clip-{clip.rank}", ratio
+                title, ratio
             )
+
+            if automation_export_dir and destination.is_file() and destination.stat().st_size > 0:
+                previous_exports = store.list_exports(clip.id)
+                if not any(record.path == str(destination) for record in previous_exports):
+                    store.create_export(
+                        Export(
+                            id=new_id(),
+                            clip_id=clip.id,
+                            path=str(destination),
+                            ratio=ratio,
+                            style=style.key,
+                            size_bytes=destination.stat().st_size,
+                        )
+                    )
+                store.update_clip(clip.id, status="exported")
+                self._emit(stage, (index + 1) / len(clips), f"Reusing clip {index + 1}")
+                continue
 
             request = export.ExportRequest(
                 source=source_path,

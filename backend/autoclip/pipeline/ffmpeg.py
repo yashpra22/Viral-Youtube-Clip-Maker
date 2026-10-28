@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
 import subprocess
 from collections.abc import Callable, Sequence
@@ -78,8 +79,20 @@ class MediaInfo:
         return ar is not None and ar < 1.0
 
 
+def find_executable(name: str) -> str | None:
+    """Find an FFmpeg tool on PATH or in Scoop's standard Windows install."""
+    exe = shutil.which(name)
+    if exe:
+        return exe
+    if os.name == "nt":
+        candidate = Path.home() / "scoop" / "apps" / "ffmpeg" / "current" / "bin" / f"{name}.exe"
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 def ffmpeg_path() -> str:
-    exe = shutil.which("ffmpeg")
+    exe = find_executable("ffmpeg")
     if not exe:
         raise FFmpegError(
             "ffmpeg was not found on PATH. Run `autoclip doctor` for install instructions.",
@@ -89,7 +102,7 @@ def ffmpeg_path() -> str:
 
 
 def ffprobe_path() -> str:
-    exe = shutil.which("ffprobe")
+    exe = find_executable("ffprobe")
     if not exe:
         raise FFmpegError(
             "ffprobe was not found on PATH. Run `autoclip doctor` for install instructions.",

@@ -40,8 +40,8 @@ export function Settings() {
 
   return (
     <div className="max-w-4xl pt-14">
-      <div className="rise flex items-baseline justify-between border-b border-ink-800 pb-5">
-        <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-none text-ink-100">
+      <div className="rise flex items-baseline justify-between border-b border-ink-300 pb-5">
+        <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-none text-ink-900">
           Settings
         </h1>
         <span
@@ -61,8 +61,8 @@ export function Settings() {
       {settings.insecure_secret_storage && (
         <p className="mt-6 border-l-2 border-sodium-600 pl-4 text-sm leading-relaxed text-ink-300">
           No OS keyring is available on this machine, so API keys are stored in plain text
-          in <code className="text-ink-200">config.json</code>. On headless Linux, installing
-          a Secret Service provider or <code className="text-ink-200">keyrings.alt</code>{' '}
+          in <code className="text-ink-800">config.json</code>. On headless Linux, installing
+          a Secret Service provider or <code className="text-ink-800">keyrings.alt</code>{' '}
           fixes this.
         </p>
       )}
@@ -76,12 +76,12 @@ export function Settings() {
               className={[
                 'block w-full border-l-2 py-3 pl-3 text-left transition-colors duration-200',
                 provider.name === settings.active_provider
-                  ? 'border-sodium-500 bg-ink-850/60'
-                  : 'border-transparent hover:border-ink-700 hover:bg-ink-850/30',
+                  ? 'border-sodium-500 bg-surface-elevated/60'
+                  : 'border-transparent hover:border-ink-700 hover:bg-surface-elevated/30',
               ].join(' ')}
             >
               <div className="flex items-baseline justify-between gap-4">
-                <span className="text-sm text-ink-100">{provider.name}</span>
+                <span className="text-sm text-ink-900">{provider.name}</span>
                 <span
                   className={`text-xs ${provider.available ? 'text-signal-good' : 'text-ink-500'}`}
                 >
@@ -89,7 +89,7 @@ export function Settings() {
                 </span>
               </div>
               {provider.models.length > 0 && (
-                <span className="numeric mt-1 block truncate text-xs text-ink-600">
+                <span className="numeric mt-1 block truncate text-xs text-ink-500">
                   {provider.models.slice(0, 6).join(' · ')}
                 </span>
               )}
@@ -164,7 +164,7 @@ export function Settings() {
           />
         </div>
 
-        <label className="mt-5 flex items-start gap-3 text-sm text-ink-200">
+        <label className="mt-5 flex items-start gap-3 text-sm text-ink-800">
           <input
             type="checkbox"
             checked={settings.whisper.diarization}
@@ -236,7 +236,7 @@ export function Settings() {
           />
         </div>
 
-        <label className="mt-5 flex items-start gap-3 text-sm text-ink-200">
+        <label className="mt-5 flex items-start gap-3 text-sm text-ink-800">
           <input
             type="checkbox"
             checked={settings.export.prefer_hardware_encoder}
@@ -258,7 +258,7 @@ export function Settings() {
           </span>
         </label>
 
-        <label className="mt-4 flex items-center gap-3 text-sm text-ink-200">
+        <label className="mt-4 flex items-center gap-3 text-sm text-ink-800">
           <input
             type="checkbox"
             checked={settings.export.write_srt}
@@ -298,7 +298,7 @@ function Section({
 }) {
   return (
     <section className="rise mt-14">
-      <div className="border-b border-ink-800 pb-2">
+      <div className="border-b border-ink-300 pb-2">
         <h2 className="eyebrow">{title}</h2>
         {note && <p className="mt-1 text-xs text-ink-500">{note}</p>}
       </div>
@@ -309,9 +309,9 @@ function Section({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-ink-850 pb-2">
+    <div className="flex items-baseline justify-between gap-4 border-b border-ink-200 pb-2">
       <dt className="text-ink-500">{label}</dt>
-      <dd className="numeric truncate text-right text-ink-200">{value}</dd>
+      <dd className="numeric truncate text-right text-ink-800">{value}</dd>
     </div>
   )
 }
@@ -404,7 +404,7 @@ function Select({
         onChange={(e) => onChange(e.target.value)}
       >
         {options.map((option) => (
-          <option key={option} value={option} className="bg-ink-850">
+          <option key={option} value={option} className="bg-surface-elevated">
             {labels[option] ?? option}
           </option>
         ))}

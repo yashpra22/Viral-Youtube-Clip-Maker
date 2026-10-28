@@ -58,6 +58,10 @@ class OllamaProvider(LLMProvider):
             "system": system,
             "prompt": user,
             "stream": False,
+            # Thinking tokens can consume the output budget without filling
+            # the JSON response field; highlight selection only needs that
+            # final structured answer.
+            "think": False,
             # Ollama's JSON mode constrains decoding to valid JSON, which is the
             # single biggest reliability win for small local models.
             "format": "json",

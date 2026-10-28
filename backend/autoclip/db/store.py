@@ -141,6 +141,8 @@ def update_job(
     job_id: str,
     *,
     status: JobStatus | None = None,
+    provider: str | None = None,
+    settings: dict[str, Any] | None = None,
     current_stage: str | None = None,
     progress: float | None = None,
     error: str | None | _Unset = UNSET,
@@ -157,6 +159,8 @@ def update_job(
     fields: dict[str, Any] = {"updated_at": utcnow()}
     for name, value in (
         ("status", status),
+        ("provider", provider),
+        ("settings_json", json.dumps(settings) if settings is not None else None),
         ("current_stage", current_stage),
         ("progress", progress),
     ):

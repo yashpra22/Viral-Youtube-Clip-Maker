@@ -17,6 +17,8 @@ import contextlib
 import logging
 from dataclasses import dataclass
 
+from ..config import Settings
+from ..config import load as load_settings
 from ..db import store
 from ..db.models import Job
 from ..pipeline.runner import JobCancelled, PipelineRunner
@@ -133,9 +135,22 @@ class JobQueue:
         def on_progress(event) -> None:
             broker.publish(progress_event(job.id, event))
 
+        try:
+            job_settings = (
+                Settings.model_validate(job.settings) if job.settings else load_settings()
+            )
+        except Exception:
+            log.warning("Ignoring invalid settings snapshot for job %s.", job.id, exc_info=True)
+            job_settings = load_settings()
+        if job_settings.ingest.prefer_youtube_captions:
+            # Automation batches deliberately cap candidate count to keep the
+            # accumulated exports within a practical local disk budget.
+            job_settings.clips.max_clips = min(job_settings.clips.max_clips, 3)
+
         runner = PipelineRunner(
             job,
             source,
+            settings=job_settings,
             on_progress=on_progress,
             is_cancelled=lambda: self.is_cancelled(job.id),
         )

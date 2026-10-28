@@ -17,6 +17,10 @@ from .transcript import Segment, Transcript, Word
 
 log = logging.getLogger(__name__)
 
+# faster-whisper's Silero VAD builds one spectrogram for the whole source file.
+# On long videos that array can exceed 1 GiB before transcription even starts.
+MAX_VAD_DURATION_S = 40 * 60
+
 
 class TranscriptionError(RuntimeError):
     """Transcription could not be completed."""
@@ -124,11 +128,23 @@ def transcribe(
     except Exception as exc:
         raise _model_load_error(exc, device, compute_type) from exc
 
+    use_vad_filter = duration_s is None or duration_s <= MAX_VAD_DURATION_S
+    if not use_vad_filter:
+        log.info(
+            "Disabling whole-file VAD for a %.1f-minute source to keep memory bounded.",
+            duration_s / 60,
+        )
+
     segments_iter, info = model.transcribe(
         str(audio),
         language=settings.language or None,
+        # faster-whisper defaults to beam search width 5. On this CPU-only
+        # machine the automation batch uses a greedy decode to keep runtime
+        # practical; hosted/GPU runs retain the higher-quality default.
+        beam_size=1 if device == "cpu" else 5,
+        best_of=1 if device == "cpu" else 5,
         word_timestamps=True,
-        vad_filter=True,
+        vad_filter=use_vad_filter,
         # Trims long silences before decoding, which both speeds things up and
         # stops Whisper hallucinating text into empty audio.
         vad_parameters={"min_silence_duration_ms": 500},

@@ -61,10 +61,10 @@ export function JobProgress() {
 
   return (
     <div className="pt-14">
-      <div className="rise flex flex-wrap items-baseline justify-between gap-6 border-b border-ink-800 pb-6">
+      <div className="rise flex flex-wrap items-baseline justify-between gap-6 border-b border-ink-300 pb-6">
         <div className="min-w-0">
           <p className="eyebrow">{job.status}</p>
-          <h1 className="mt-2 max-w-3xl truncate font-display text-[clamp(1.75rem,4vw,3rem)] leading-tight text-ink-100">
+          <h1 className="mt-2 max-w-3xl truncate font-display text-[clamp(1.75rem,4vw,3rem)] leading-tight text-ink-900">
             {job.source?.title || 'Untitled'}
           </h1>
           {job.source && (
@@ -77,9 +77,9 @@ export function JobProgress() {
         </div>
 
         <div className="flex items-baseline gap-8">
-          <span className="numeric font-display text-[clamp(2.5rem,6vw,4rem)] leading-none text-sodium-500">
+          <span className="numeric font-display text-[clamp(2.5rem,6vw,4rem)] leading-none text-accent-600">
             {percent}
-            <span className="text-2xl text-ink-600">%</span>
+            <span className="text-2xl text-ink-500">%</span>
           </span>
           {(job.status === 'running' || job.status === 'queued') && (
             <button onClick={cancel} disabled={cancelling} className="btn btn-ghost">
@@ -137,7 +137,7 @@ export function JobProgress() {
           return (
             <li
               key={stage.key}
-              className="rise grid grid-cols-[2.5rem_1fr] items-start gap-x-5 border-b border-ink-850 py-5"
+              className="rise grid grid-cols-[2.5rem_1fr] items-start gap-x-5 border-b border-ink-200 py-5"
               style={{ animationDelay: `${index * 55}ms` }}
             >
               <span
@@ -148,8 +148,8 @@ export function JobProgress() {
                     : state === 'stopped'
                       ? 'text-signal-bad'
                       : state === 'active'
-                        ? 'text-sodium-500'
-                        : 'text-ink-600',
+                        ? 'text-accent-600'
+                        : 'text-ink-500',
                 ].join(' ')}
               >
                 {state === 'done' ? '✓' : state === 'stopped' ? '✕' : String(index + 1).padStart(2, '0')}
@@ -160,7 +160,7 @@ export function JobProgress() {
                   <span
                     className={[
                       'text-[0.9375rem]',
-                      state === 'pending' ? 'text-ink-600' : 'text-ink-100',
+                      state === 'pending' ? 'text-ink-500' : 'text-ink-900',
                     ].join(' ')}
                   >
                     {stage.label}

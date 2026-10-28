@@ -90,6 +90,11 @@ class ExportSettings(BaseModel):
     #: Use h264_nvenc when the hardware supports it. Falls back to libx264.
     prefer_hardware_encoder: bool = True
     crf: int = 18
+    #: CPU encoding speed/size trade-off. Automation uses ``veryfast`` while
+    #: interactive exports keep the default ``medium`` preset.
+    x264_preset: Literal[
+        "ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow"
+    ] = "medium"
     #: Also write a .srt sidecar next to each exported clip.
     write_srt: bool = False
 

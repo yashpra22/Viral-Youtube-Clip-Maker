@@ -29,7 +29,9 @@ KNOWN_ENDPOINTS = {
     "Groq": "https://api.groq.com/openai/v1",
     "DeepSeek": "https://api.deepseek.com/v1",
     "Together": "https://api.together.xyz/v1",
+    "NVIDIA NIM": "https://integrate.api.nvidia.com/v1",
     "LM Studio (local)": "http://localhost:1234/v1",
+    "NVIDIA NIM": "https://integrate.api.nvidia.com/v1",
 }
 
 
@@ -59,6 +61,16 @@ class OpenAIProvider(LLMProvider):
         kwargs = {"api_key": key}
         if self.base_url:
             kwargs["base_url"] = self.base_url
+        if self.base_url and "integrate.api.nvidia.com" in self.base_url:
+            # Free hosted inference can queue for a long time; bound a stuck
+            # request so one transcript window cannot stall the batch forever.
+            kwargs["timeout"] = 180.0
+            kwargs["max_retries"] = 0
+        elif self.base_url and "openrouter.ai" in self.base_url:
+            # OpenRouter free endpoints can queue; keep a slow provider from
+            # holding up a batch indefinitely.
+            kwargs["timeout"] = 120.0
+            kwargs["max_retries"] = 0
         return AsyncOpenAI(**kwargs)
 
     def _is_local(self) -> bool:
@@ -71,26 +83,58 @@ class OpenAIProvider(LLMProvider):
         request = {
             "model": self.model,
             "temperature": config.temperature,
+            # Clip metadata is short; an unbounded response wastes time and
+            # can make reasoning models spend far longer than the pipeline
+            # needs on every transcript window.
+            "max_tokens": 2048,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
         }
+        if (
+            self.base_url
+            and "integrate.api.nvidia.com" in self.base_url
+            and self.model.startswith("deepseek-ai/deepseek-v4")
+        ):
+            # NVIDIA's hosted DeepSeek V4 endpoint defaults to high reasoning
+            # effort. Clip selection needs a concise JSON result, so disable
+            # its long reasoning pass when the endpoint supports this control.
+            request["reasoning_effort"] = "none"
+        elif (
+            self.base_url
+            and "integrate.api.nvidia.com" in self.base_url
+            and self.model == "nvidia/nemotron-3.5-lightning-30b-a3b"
+        ):
+            request["extra_body"] = {"chat_template_kwargs": {"enable_thinking": False}}
         # Only OpenAI's own endpoint reliably honours this; other vendors 400 on
         # it, so a failed request is retried once without it.
-        try:
-            response = await client.chat.completions.create(
-                **request, response_format={"type": "json_object"}
-            )
-        except Exception as exc:
-            if _is_unsupported_parameter(exc):
-                log.debug("Endpoint rejected response_format; retrying without it.")
-                try:
-                    response = await client.chat.completions.create(**request)
-                except Exception as retry_exc:
-                    raise _translate(retry_exc, self.name, self.model) from retry_exc
-            else:
+        # This free OpenRouter variant rejects response_format even though it
+        # otherwise speaks Chat Completions. The prompt already requests JSON.
+        openrouter_free_nemotron = (
+            self.base_url
+            and "openrouter.ai" in self.base_url
+            and self.model == "nvidia/nemotron-3.5-lightning:free"
+        )
+        if openrouter_free_nemotron:
+            try:
+                response = await client.chat.completions.create(**request)
+            except Exception as exc:
                 raise _translate(exc, self.name, self.model) from exc
+        else:
+            try:
+                response = await client.chat.completions.create(
+                    **request, response_format={"type": "json_object"}
+                )
+            except Exception as exc:
+                if _is_unsupported_parameter(exc):
+                    log.debug("Endpoint rejected response_format; retrying without it.")
+                    try:
+                        response = await client.chat.completions.create(**request)
+                    except Exception as retry_exc:
+                        raise _translate(retry_exc, self.name, self.model) from retry_exc
+                else:
+                    raise _translate(exc, self.name, self.model) from exc
 
         choices = response.choices or []
         if not choices:

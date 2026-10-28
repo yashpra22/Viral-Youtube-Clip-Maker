@@ -168,8 +168,12 @@ async def patch_captions(clip_id: str, payload: CaptionPatchIn) -> ClipOut:
     return await asyncio.to_thread(_clip_out, clip)
 
 
-@router.post("/clips/{clip_id}/export", response_model=ExportOut, status_code=201)
-async def export_clip(clip_id: str, payload: ExportRequestIn) -> ExportOut:
+async def _export_clip(
+    clip_id: str,
+    payload: ExportRequestIn,
+    *,
+    destination_dir: Path | None = None,
+) -> ExportOut:
     """Render one clip and return its download link."""
     clip = await asyncio.to_thread(store.get_clip, clip_id)
     if clip is None:
@@ -196,10 +200,13 @@ async def export_clip(clip_id: str, payload: ExportRequestIn) -> ExportOut:
     workspace = JobWorkspace(clip.job_id)
     crop_path = await asyncio.to_thread(_crop_path_for, workspace, clip, source, payload.ratio)
 
-    destination = (
-        paths.exports_dir()
-        / clip.job_id
-        / export_module.output_filename(clip.title or f"clip-{clip.rank}", payload.ratio)
+    filename_title = clip.title or f"clip-{clip.rank}"
+    if destination_dir is not None:
+        # Project-local automation exports every candidate in one pass. Prefix
+        # the rank so duplicate or nearly identical AI titles cannot overwrite.
+        filename_title = f"{clip.rank:02d}-{filename_title}"
+    destination = (destination_dir or (paths.exports_dir() / clip.job_id)) / (
+        export_module.output_filename(filename_title, payload.ratio)
     )
 
     request = export_module.ExportRequest(
@@ -235,6 +242,11 @@ async def export_clip(clip_id: str, payload: ExportRequestIn) -> ExportOut:
     await asyncio.to_thread(store.update_clip, clip_id, status="exported")
 
     return ExportOut.of(record)
+
+
+@router.post("/clips/{clip_id}/export", response_model=ExportOut, status_code=201)
+async def export_clip(clip_id: str, payload: ExportRequestIn) -> ExportOut:
+    return await _export_clip(clip_id, payload)
 
 
 @router.get("/exports/{export_id}/download")

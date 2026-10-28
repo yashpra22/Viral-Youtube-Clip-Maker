@@ -135,10 +135,19 @@ async def detect(
 
     log.info("Detecting highlights across %d window(s) with %s.", len(windows), provider.name)
 
-    concurrency = LOCAL_CONCURRENCY if provider.name == "ollama" else HOSTED_CONCURRENCY
+    is_ollama_cloud = (
+        provider.name == "ollama"
+        and bool(getattr(provider, "model", "").endswith("-cloud"))
+    )
+    concurrency = (
+        LOCAL_CONCURRENCY
+        if provider.name == "ollama" and not is_ollama_cloud
+        else HOSTED_CONCURRENCY
+    )
     semaphore = asyncio.Semaphore(concurrency)
     completed = 0
     lock = asyncio.Lock()
+    failures: list[str] = []
 
     async def run_window(window: TranscriptWindow) -> list[ClipCandidate]:
         nonlocal completed
@@ -154,6 +163,7 @@ async def detect(
                     window.last_word,
                     exc,
                 )
+                failures.append(f"words {window.first_word}-{window.last_word}: {exc}")
                 candidates = []
             async with lock:
                 completed += 1
@@ -165,6 +175,13 @@ async def detect(
     candidates = [c for group in results for c in group]
 
     if not candidates:
+        if failures:
+            unique_failures = list(dict.fromkeys(failures))[:3]
+            detail = " | ".join(unique_failures)
+            raise HighlightError(
+                f"The highlight provider failed for all usable windows ({provider.name}): "
+                f"{detail}"
+            )
         raise HighlightError(
             "No clips were found. This can mean the video genuinely has no "
             "self-contained highlights, or that the model struggled with the "

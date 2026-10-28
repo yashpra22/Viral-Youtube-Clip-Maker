@@ -61,10 +61,10 @@ export function Ingest() {
           a centred hero card. */}
       <div className="rise max-w-3xl">
         <p className="eyebrow">Local · No accounts · No watermarks</p>
-        <h1 className="mt-5 font-display text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.95] text-ink-100">
+        <h1 className="mt-5 font-display text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.95] text-ink-900">
           Long video in.
           <br />
-          <span className="italic text-sodium-500">Shorts</span> out.
+          <span className="italic text-accent-600">Shorts</span> out.
         </h1>
       </div>
 
@@ -137,7 +137,7 @@ export function Ingest() {
               if (e.key === 'Enter' || e.key === ' ') fileInput.current?.click()
             }}
           >
-            <span className="font-display text-2xl text-ink-200">
+            <span className="font-display text-2xl text-ink-800">
               {busy === 'file' ? 'Uploading…' : 'Drop video or audio'}
             </span>
             <span className="text-xs text-ink-500">mp4 · mov · mkv · webm · mp3 · wav · m4a</span>
@@ -166,7 +166,7 @@ export function Ingest() {
         <p className="mt-10 max-w-3xl border-l-2 border-sodium-600 pl-4 text-sm text-ink-300">
           No AI provider is reachable yet, so clip selection will fail. Add an API key or
           start Ollama in{' '}
-          <a href="/settings" className="text-sodium-500 underline underline-offset-4">
+          <a href="/settings" className="text-accent-600 underline underline-offset-4">
             Settings
           </a>
           .
@@ -267,7 +267,7 @@ function AdvancedOptions({
                 onChange={(v) => set('max_duration_s', v)}
               />
             </div>
-            <label className="flex items-center gap-3 text-sm text-ink-200 sm:col-span-2">
+            <label className="flex items-center gap-3 text-sm text-ink-800 sm:col-span-2">
               <input
                 type="checkbox"
                 checked={overrides.diarization ?? false}
@@ -307,7 +307,7 @@ function Selector({
             key={option.value}
             value={option.value}
             disabled={option.disabled}
-            className="bg-ink-850"
+            className="bg-surface-elevated"
           >
             {option.label}
           </option>
@@ -353,9 +353,9 @@ function RecentJobs({ jobs }: { jobs: Job[] }) {
 
   return (
     <section className="rise mt-24" style={{ animationDelay: '240ms' }}>
-      <div className="flex items-baseline justify-between border-b border-ink-800 pb-3">
+      <div className="flex items-baseline justify-between border-b border-ink-300 pb-3">
         <h2 className="eyebrow">Recent</h2>
-        <span className="numeric text-xs text-ink-600">{jobs.length}</span>
+        <span className="numeric text-xs text-ink-500">{jobs.length}</span>
       </div>
 
       <ul>
@@ -363,9 +363,9 @@ function RecentJobs({ jobs }: { jobs: Job[] }) {
           <li key={job.id}>
             <a
               href={job.status === 'done' ? `/jobs/${job.id}/clips` : `/jobs/${job.id}`}
-              className="group grid grid-cols-[1fr_auto] items-baseline gap-4 border-b border-ink-850 py-4 transition-colors duration-200 hover:bg-ink-850/40 sm:grid-cols-[1fr_7rem_6rem_5rem]"
+              className="group grid grid-cols-[1fr_auto] items-baseline gap-4 border-b border-ink-200 py-4 transition-colors duration-200 hover:bg-surface-elevated/40 sm:grid-cols-[1fr_7rem_6rem_5rem]"
             >
-              <span className="truncate text-[0.9375rem] text-ink-200 group-hover:text-ink-100">
+              <span className="truncate text-[0.9375rem] text-ink-800 group-hover:text-ink-900">
                 {job.source?.title || 'Untitled'}
               </span>
               <span className="numeric hidden text-xs text-ink-500 sm:block">
@@ -385,15 +385,15 @@ function StatusTag({ job }: { job: Job }) {
   const tone: Record<string, string> = {
     done: 'text-signal-good',
     failed: 'text-signal-bad',
-    running: 'text-sodium-500',
-    queued: 'text-ink-400',
+    running: 'text-accent-600',
+    queued: 'text-ink-500',
     cancelled: 'text-ink-500',
   }
   const label =
     job.status === 'running' ? `${Math.round(job.progress * 100)}%` : job.status
 
   return (
-    <span className={`numeric justify-self-end text-xs ${tone[job.status] ?? 'text-ink-400'}`}>
+    <span className={`numeric justify-self-end text-xs ${tone[job.status] ?? 'text-ink-500'}`}>
       {label}
     </span>
   )

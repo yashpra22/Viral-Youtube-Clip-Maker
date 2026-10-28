@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Literal
 
+from .pipeline.ffmpeg import find_executable
+
 log = logging.getLogger(__name__)
 
 #: ffmpeg filters the pipeline cannot run without.
@@ -189,8 +191,8 @@ class SystemReport:
 
 def probe_ffmpeg() -> FFmpegInfo:
     info = FFmpegInfo()
-    exe = shutil.which("ffmpeg")
-    info.ffprobe_found = shutil.which("ffprobe") is not None
+    exe = find_executable("ffmpeg")
+    info.ffprobe_found = find_executable("ffprobe") is not None
     if not exe:
         return info
 

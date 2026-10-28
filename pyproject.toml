@@ -39,6 +39,9 @@ dependencies = [
   "yt-dlp>=2026.1.1",
   # Transcription
   "faster-whisper>=1.1",
+  # faster-whisper 1.2.1 passes metadata_errors to av.open(); PyAV 19 removed
+  # that keyword and breaks every local transcription before decoding starts.
+  "av<19",
   # Reframe
   "mediapipe>=0.10.14",
   # No [opencv] extra: scenedetect 0.7 dropped it and now depends on
