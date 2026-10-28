@@ -99,6 +99,15 @@ class ExportSettings(BaseModel):
     write_srt: bool = False
 
 
+class YouTubeSettings(BaseModel):
+    """YouTube upload settings."""
+    client_id: str = ""
+    client_secret: str = ""
+    redirect_uri: str = "http://localhost:8000/api/youtube/callback"
+    default_category_id: str = "22"  # People & Blogs
+    default_privacy: str = "public"  # public, unlisted, private
+
+
 class Settings(BaseModel):
     """Top-level persisted settings."""
 
@@ -115,6 +124,7 @@ class Settings(BaseModel):
     clips: ClipSettings = Field(default_factory=ClipSettings)
     ingest: IngestSettings = Field(default_factory=IngestSettings)
     export: ExportSettings = Field(default_factory=ExportSettings)
+    youtube: YouTubeSettings = Field(default_factory=YouTubeSettings)
 
     #: Set when secrets had to be written to config.json because no keyring
     #: backend was usable. Surfaced as a warning in the UI and in `doctor`.
