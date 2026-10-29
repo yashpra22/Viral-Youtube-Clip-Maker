@@ -30,15 +30,15 @@ html:not([data-theme='dark']) {
   @theme {
     --font-display: 'Instrument Serif', Georgia, serif;
     --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
-    --color-ink-900: oklch(0.22 0.01 55);
-    --color-ink-850: oklch(0.28 0.01 55);
-    --color-ink-800: oklch(0.35 0.01 55);
-    --color-ink-700: oklch(0.45 0.01 55);
-    --color-ink-600: oklch(0.56 0.01 55);
-    --color-ink-400: oklch(0.68 0.01 55);
-    --color-ink-300: oklch(0.80 0.01 55);
-    --color-ink-200: oklch(0.90 0.01 55);
-    --color-ink-100: oklch(0.965 0.01 55);
+    --color-ink-900: oklch(0.18 0.01 55);
+    --color-ink-850: oklch(0.26 0.01 55);
+    --color-ink-800: oklch(0.34 0.01 55);
+    --color-ink-700: oklch(0.44 0.01 55);
+    --color-ink-600: oklch(0.54 0.01 55);
+    --color-ink-400: oklch(0.66 0.01 55);
+    --color-ink-300: oklch(0.78 0.01 55);
+    --color-ink-200: oklch(0.88 0.01 55);
+    --color-ink-100: oklch(0.94 0.01 55);
     --color-surface: oklch(0.985 0.005 55);
     --color-surface-elevated: oklch(0.995 0.005 55);
     --color-surface-hover: oklch(0.94 0.005 55);
